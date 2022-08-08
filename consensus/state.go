@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"runtime/debug"
 	"sort"
 	"time"
@@ -2008,6 +2009,11 @@ func (cs *State) addVote(vote *types.Vote, peerID p2p.ID) (added bool, err error
 		if cs.Step != cstypes.RoundStepNewHeight {
 			// Late precommit at prior height is ignored
 			cs.Logger.Debug("precommit vote came in after commit timeout and has been ignored", "vote", vote)
+
+			// Stack trace to view running Goroutines
+			buf := make([]byte, 25<<20) // 25 MiB
+			len := runtime.Stack(buf, true)
+			cs.Logger.Debug("Runtime Stack Trace", "stack", string(buf[:len]))
 			return
 		}
 

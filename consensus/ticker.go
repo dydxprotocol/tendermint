@@ -1,6 +1,9 @@
 package consensus
 
 import (
+	"fmt"
+	"os"
+	"runtime"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -122,6 +125,25 @@ func (t *timeoutTicker) timeoutRoutine() {
 			t.Logger.Debug("Scheduled timeout", "dur", ti.Duration, "height", ti.Height, "round", ti.Round, "step", ti.Step)
 		case <-t.timer.C:
 			t.Logger.Info("Timed out", "dur", ti.Duration, "height", ti.Height, "round", ti.Round, "step", ti.Step)
+
+			if ti.Round > 0 {
+				// Stack trace to view running Goroutines
+				buf := make([]byte, 50<<20) // 50 MiB
+				len := runtime.Stack(buf, true)
+
+				var f *os.File
+				f, err := os.Create(fmt.Sprintf("/tmp/stackdump-%v", time.Now()))
+				if err != nil {
+					panic(err)
+				}
+
+				defer f.Close()
+				_, err = f.Write(buf[:len])
+				if err != nil {
+					panic(err)
+				}
+			}
+
 			// go routine here guarantees timeoutRoutine doesn't block.
 			// Determinism comes from playback in the receiveRoutine.
 			// We can eliminate it by merging the timeoutRoutine into receiveRoutine

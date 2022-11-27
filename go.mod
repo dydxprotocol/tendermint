@@ -10,7 +10,7 @@ require (
 	github.com/btcsuite/btcd v0.22.1
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/bufbuild/buf v1.9.0
-	github.com/cosmos/cosmos-sdk v0.46.1
+	github.com/cosmos/cosmos-sdk v0.46.5
 	github.com/creachadair/taskgroup v0.3.2
 	github.com/fortytw2/leaktest v1.3.0
 	github.com/go-kit/kit v0.12.0
@@ -59,6 +59,7 @@ require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/math v1.0.0-beta.3 // indirect
+	github.com/99designs/go-keychain v0.0.0-20160105221929-9cf53c87839c // indirect
 	github.com/Abirdcfly/dupword v0.0.7 // indirect
 	github.com/Antonboom/errname v0.1.7 // indirect
 	github.com/Antonboom/nilnil v0.1.1 // indirect
@@ -283,6 +284,6 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk v0.46.1 => github.com/dydxprotocol/cosmos-sdk v0.46.1-fork
+	github.com/cosmos/cosmos-sdk v0.46.5 => github.com/dydxprotocol/cosmos-sdk v0.46.5-fork
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 )

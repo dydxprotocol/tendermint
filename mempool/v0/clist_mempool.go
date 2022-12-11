@@ -566,13 +566,13 @@ func (mem *CListMempool) ReapMaxBytesMaxGas(maxBytes, maxGas int64) types.Txs {
 	for e := mem.txs.Front(); e != nil; e = e.Next() {
 		memTx := e.Value.(*mempoolTx)
 
-		txs = append(txs, memTx.tx)
-
 		// If this transaction is Cosmos transaction containing a `PlaceOrder` or `CancelOrder` message,
 		// don't include it in the next proposed block.
 		if mem.isClobOrderTransaction(memTx) {
 			continue
 		}
+
+		txs = append(txs, memTx.tx)
 
 		dataSize := types.ComputeProtoSizeForTxs([]types.Tx{memTx.tx})
 

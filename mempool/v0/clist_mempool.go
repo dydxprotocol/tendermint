@@ -6,7 +6,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	cosmostx "github.com/cosmos/cosmos-sdk/types/tx"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/clist"
@@ -414,7 +413,7 @@ func (mem *CListMempool) resCbFirstTime(
 			// the next proposal. If no transactions are available for inclusion in
 			// the next proposal, the consensus algorithm will wait for `create_empty_blocks_interval`
 			// before proposing an empty block instead.
-			if mem.isClobOrderTransaction(memTx) {
+			if mempool.IsClobOrderTransaction(memTx.tx, mem.logger) {
 				return
 			}
 
@@ -439,25 +438,6 @@ func (mem *CListMempool) resCbFirstTime(
 	default:
 		// ignore other messages
 	}
-}
-
-// isClobOrderTransaction returns true if the provided `mempoolTx` is a
-// Cosmos transaction containing a `MsgPlaceOrder` or `MsgCancelOrder` message.
-func (mem *CListMempool) isClobOrderTransaction(memTx *mempoolTx) bool {
-	cosmosTx := &cosmostx.Tx{}
-	err := cosmosTx.Unmarshal(memTx.tx)
-	if err != nil {
-		mem.logger.Error("isClobOrderTransaction error. Invalid Cosmos Transaction.")
-		return false
-	}
-
-	if len(cosmosTx.Body.Messages) == 1 &&
-		(cosmosTx.Body.Messages[0].TypeUrl == "/dydxprotocol.clob.MsgPlaceOrder" ||
-			cosmosTx.Body.Messages[0].TypeUrl == "/dydxprotocol.clob.MsgCancelOrder") {
-		return true
-	}
-
-	return false
 }
 
 // callback, which is called after the app rechecked the tx.
@@ -568,7 +548,7 @@ func (mem *CListMempool) ReapMaxBytesMaxGas(maxBytes, maxGas int64) types.Txs {
 
 		// If this transaction is Cosmos transaction containing a `PlaceOrder` or `CancelOrder` message,
 		// don't include it in the next proposed block.
-		if mem.isClobOrderTransaction(memTx) {
+		if mempool.IsClobOrderTransaction(memTx.tx, mem.logger) {
 			continue
 		}
 
@@ -685,7 +665,7 @@ func (mem *CListMempool) recheckTxs() {
 		memTx := e.Value.(*mempoolTx)
 		// If this transaction is Cosmos transaction containing a `PlaceOrder` or `CancelOrder` message,
 		// remove it from the mempool instead of rechecking.
-		if mem.isClobOrderTransaction(memTx) {
+		if mempool.IsClobOrderTransaction(memTx.tx, mem.logger) {
 			mem.removeTx(memTx.tx, e, false)
 		}
 	}

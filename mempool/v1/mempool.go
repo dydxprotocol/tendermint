@@ -300,7 +300,15 @@ func (txmp *TxMempool) allEntriesSorted() []*WrappedTx {
 
 	all := make([]*WrappedTx, 0, len(txmp.txByKey))
 	for _, tx := range txmp.txByKey {
-		all = append(all, tx.Value.(*WrappedTx))
+		w := tx.Value.(*WrappedTx)
+
+		// If this transaction is Cosmos transaction containing a `PlaceOrder` or `CancelOrder` message,
+		// don't include it in the list of transactions.
+		if mempool.IsClobOrderTransaction(w.tx, txmp.logger) {
+			continue
+		}
+
+		all = append(all, w)
 	}
 	sort.Slice(all, func(i, j int) bool {
 		if all[i].priority == all[j].priority {
@@ -667,7 +675,18 @@ func (txmp *TxMempool) recheckTransactions() {
 	// Collect transactions currently in the mempool requiring recheck.
 	wtxs := make([]*WrappedTx, 0, txmp.txs.Len())
 	for e := txmp.txs.Front(); e != nil; e = e.Next() {
-		wtxs = append(wtxs, e.Value.(*WrappedTx))
+		wtx := e.Value.(*WrappedTx)
+		// If this transaction is Cosmos transaction containing a `PlaceOrder` or `CancelOrder` message,
+		// remove it from the mempool instead of rechecking.
+		if mempool.IsClobOrderTransaction(wtx.tx, txmp.logger) {
+			txmp.removeTxByElement(e)
+		}
+		wtxs = append(wtxs, wtx)
+	}
+
+	// If none of the transactions require recheck, return early.
+	if len(wtxs) == 0 {
+		return
 	}
 
 	// Issue CheckTx calls for each remaining transaction, and when all the
@@ -742,11 +761,11 @@ func (txmp *TxMempool) purgeExpiredTxs(blockHeight int64) {
 		if txmp.config.TTLNumBlocks > 0 && (blockHeight-w.height) > txmp.config.TTLNumBlocks {
 			txmp.removeTxByElement(cur)
 			txmp.cache.Remove(w.tx)
-			txmp.metrics.EvictedTxs.Add(1)
+			txmp.metrics.PurgedNumBlocksTxs.Add(1)
 		} else if txmp.config.TTLDuration > 0 && now.Sub(w.timestamp) > txmp.config.TTLDuration {
 			txmp.removeTxByElement(cur)
 			txmp.cache.Remove(w.tx)
-			txmp.metrics.EvictedTxs.Add(1)
+			txmp.metrics.PurgedDurationTxs.Add(1)
 		}
 		cur = next
 	}

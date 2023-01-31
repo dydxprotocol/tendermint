@@ -1,3 +1,31 @@
+# dYdX Fork of Tendermint
+
+This is a lightweight fork of Tendermint. Forked code resides on the default branch.
+
+## Making Changes to the Fork
+
+1. Open a PR against the current default branch (i.e. `dydx-fork-v0.37.0-rc2`).
+2. Get approval, and merge.
+3. After merging, update the `v4` repository's `go.mod`, and `go.sum` files with your merged `$COMMIT_HASH`.
+4. (In `dydxprotocol/v4`) `go mod edit -replace github.com/tendermint/tendermint=github.com/dydxprotocol/tendermint@$COMMIT_HASH`
+5. (In `dydxprotocol/v4`) `go mod tidy`
+6. Open a PR in `dydxprotocol/v4` to bump the version of the fork.
+
+## Fork maintenance
+
+We'd like to keep the `master` branch up to date with `tendermint/tendermint`. You can utilize GitHub's [sync fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) button to accomplish this. ⚠️ Please only use this on the `master` branch, not on the fork branches as it will discard our commits.⚠️
+
+## Updating Tendermint to new versions
+
+When a new version of Tendermint is published, we may want to adopt the changes in our fork. This process can be somewhat tedious, but below are the recommended steps to accomplish this.
+
+1. Ensure the `master` branch is up to date by following the steps above in "Fork maintenance".
+2. Create a new branch off the desired `master` commit. It should be named something like `dydx-fork-$VERSION` where `$VERSION` is the version of Tendermint being forked. i.e. `dydx-fork-v0.37.0-rc2`.
+3. Open a PR which cherry-picks each commit in the current default branch, in order, on to `dydx-fork-$VERSION` (note: you may want to consider creating multiple PRs for this process if there are difficulties or merge conflicts).
+4. Get approval, and merge.
+5. Update `dydxprotocol/v4` by following the steps in "Making Changes to the fork" above.
+6. Set `dydx-fork-$VERSION` as the [default branch](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch) in this repository.
+
 # Tendermint
 
 ![banner](docs/tendermint-core-image.jpg)
